@@ -14,7 +14,7 @@ return [
     */
     'servers' => [
         'main' => [
-            'host' => 'sharedwithexpose.com',
+            'host' => 'tunnel.jaspis.me',
             'port' => 443,
         ],
     ],
@@ -32,7 +32,7 @@ return [
     | if available.
     |
     */
-    'server_endpoint' => 'https://expose.dev/api/servers',
+    'server_endpoint' => null,
 
     /*
     |--------------------------------------------------------------------------
@@ -69,7 +69,7 @@ return [
     | > expose token YOUR-AUTH-TOKEN
     |
     */
-    'auth_token' => '',
+    'auth_token' => 'your-server-generated-token-here',
 
     /*
     |--------------------------------------------------------------------------
@@ -83,7 +83,7 @@ return [
     | > expose default-domain YOUR-CUSTOM-WHITELABEL-DOMAIN
     |
     */
-    'default_domain' => null,
+    'default_domain' => 'tunnel.jaspis.me',
 
     /*
     |--------------------------------------------------------------------------
@@ -173,7 +173,7 @@ return [
         'size' => '1MB',
     ],
 
-    'platform_url' => 'https://expose.dev',
+    'platform_url' => null,
 
     /*
     |--------------------------------------------------------------------------

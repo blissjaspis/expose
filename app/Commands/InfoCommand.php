@@ -108,11 +108,12 @@ class InfoCommand extends ServerAwareCommand implements FetchesPlatformDataContr
     protected function checkLatency(string $server): int
     {
 
-        if ($server === "free") {
-            $host = "sharedwithexpose.com";
-        } else {
-            $host = "expose.{$server}.sharedwithexpose.com";
-        }
+        $host = "tunnel.jaspis.me";
+        // if ($server === "free") {
+        //     $host = "sharedwithexpose.com";
+        // } else {
+        //     $host = "expose.{$server}.sharedwithexpose.com";
+        // }
 
         try {
             $result = Http::timeout(5)->get($host);
@@ -132,7 +133,7 @@ class InfoCommand extends ServerAwareCommand implements FetchesPlatformDataContr
             "token" => config('expose.auth_token'),
             "default_server" => config('expose.default_server'),
             "default_domain" => config('expose.default_domain'),
-            "plan" => $this->isProToken() ? "pro" : "free",
+            "plan" => "self-hosted",  // Instead of $this->isProToken() ? "pro" : "free"
             "version" => $this->getVersion(),
             "latency" => $this->checkLatency(config('expose.default_server')) . "ms"
         ];

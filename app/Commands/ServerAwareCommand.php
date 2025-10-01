@@ -12,9 +12,9 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 
 abstract class ServerAwareCommand extends Command
 {
-    const DEFAULT_HOSTNAME = 'sharedwithexpose.com';
+    const DEFAULT_HOSTNAME = 'tunnel.jaspis.me';
     const DEFAULT_PORT = 443;
-    const DEFAULT_SERVER_ENDPOINT = 'https://expose.dev/api/servers';
+    const DEFAULT_SERVER_ENDPOINT = 'https://expose.tunnel.jaspis.me/api/servers';
 
     public function __construct()
     {
