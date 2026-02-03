@@ -10,3 +10,4 @@ database/expose.db
 .env
 .box_dump
 /database/database.sqlite
+.DS_Store
