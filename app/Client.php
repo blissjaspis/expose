@@ -39,6 +39,8 @@ class Client
     public static $subdomains = [];
     public static $localUrl = '';
 
+    protected ?string $closingMessage = null;
+
     public function __construct(LoopInterface $loop, Configuration $configuration, CliLogger $logger)
     {
         $this->loop = $loop;
@@ -113,6 +115,10 @@ class Client
                 $connection->authenticate($sharedUrl, $subdomain, $serverHost);
 
                 $clientConnection->on('close', function () use ($sharedUrl, $subdomain, $serverHost, $authToken) {
+                    if ($this->closingMessage) {
+                        $this->logger->renderMessage($this->closingMessage);
+                    }
+
                     $this->logger->error('Connection to server closed.');
 
                     $this->retryConnectionOrExit(function () use ($sharedUrl, $subdomain, $serverHost, $authToken) {
@@ -139,11 +145,20 @@ class Client
                         $this->logger->renderMessage($data->message);
                     }
 
-                    $this->logger->renderConnectionTable([
+                    $this->closingMessage = $data->closing_message ?? null;
+
+                    $connectionInfo = [
                         "Shared site" => $sharedUrl,
                         "Dashboard" => "http://127.0.0.1:".config()->get('expose.dashboard_port'),
                         "Public URL" => "https://{$data->subdomain}.{$host}",
-                    ]);
+                    ];
+
+                    if ($this->configuration->magicAuth() !== null) {
+                        $patterns = $this->configuration->getAllowedMagicAuthPatterns();
+                        $connectionInfo["Magic Auth"] = empty($patterns) ? "Enabled (any email)" : "Enabled (" . implode(', ', $patterns) . ")";
+                    }
+
+                    $this->logger->renderConnectionTable($connectionInfo);
                     $this->logger->line('');
 
                     static::$subdomains[] = "{$httpProtocol}://{$data->subdomain}.{$host}";
@@ -189,6 +204,10 @@ class Client
                 $this->attachCommonConnectionListeners($connection, $deferred);
 
                 $clientConnection->on('close', function () use ($port, $authToken) {
+                    if ($this->closingMessage) {
+                        $this->logger->renderMessage($this->closingMessage);
+                    }
+
                     $this->logger->error('Connection to server closed.');
 
                     $this->retryConnectionOrExit(function () use ($port, $authToken) {
@@ -204,6 +223,8 @@ class Client
                     $this->logger->info("Shared-Port:\t\t<options=bold>{$data->shared_port}</>");
                     $this->logger->info("Expose-URL:\t\t<options=bold>tcp://{$host}:{$data->shared_port}</>");
                     $this->logger->line('');
+
+                    $this->closingMessage = $data->closing_message ?? null;
 
                     $deferred->resolve($data);
                 });

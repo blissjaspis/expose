@@ -4,6 +4,7 @@ namespace Expose\Client\Http;
 
 use Expose\Client\Configuration;
 use Expose\Client\Http\Modifiers\CheckBasicAuthentication;
+use Expose\Client\Http\Modifiers\CheckMagicAuthentication;
 use Expose\Client\Logger\RequestLogger;
 use GuzzleHttp\Psr7\Message;
 use Laminas\Http\Request;
@@ -32,7 +33,9 @@ class HttpClient
     /** @var array */
     protected $modifiers = [
         CheckBasicAuthentication::class,
+        CheckMagicAuthentication::class,
     ];
+
     /** @var Configuration */
     protected $configuration;
 
@@ -88,6 +91,9 @@ class HttpClient
 
     protected function sendRequestToApplication(RequestInterface $request, $proxyConnection = null)
     {
+        // Remove Expect header to prevent 100-continue responses from interfering with the proxy
+        $request = $request->withoutHeader('Expect');
+
         $uri = $request->getUri();
 
         if ($this->configuration->isSecureSharedUrl()) {

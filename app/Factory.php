@@ -40,6 +40,9 @@ class Factory
     /** @var string */
     protected $basicAuth;
 
+    /** @var string|null */
+    protected $magicAuth;
+
     /** @var bool */
     protected $preventCORS = false;
 
@@ -86,6 +89,13 @@ class Factory
         return $this;
     }
 
+    public function setMagicAuth(?string $magicAuth)
+    {
+        $this->magicAuth = $magicAuth;
+
+        return $this;
+    }
+
     public function setPreventCORS(bool $preventCORS)
     {
         $this->preventCORS = $preventCORS;
@@ -103,7 +113,7 @@ class Factory
     protected function bindConfiguration()
     {
         app()->singleton(Configuration::class, function ($app) {
-            return new Configuration($this->host, $this->port, $this->auth, $this->basicAuth, $this->preventCORS);
+            return new Configuration($this->host, $this->port, $this->auth, $this->basicAuth, $this->preventCORS, $this->magicAuth);
         });
     }
 
@@ -173,7 +183,7 @@ class Factory
 
     protected function detectNextAvailablePort($startPort = 4040): int
     {
-        while (is_resource(@fsockopen('127.0.0.1', $startPort))) {
+        while (is_resource(@fsockopen('127.0.0.1', $startPort,  timeout: 1))) {
             $startPort++;
         }
 

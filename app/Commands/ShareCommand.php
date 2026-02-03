@@ -2,9 +2,9 @@
 
 namespace Expose\Client\Commands;
 
-
 use Expose\Client\Commands\Concerns\DetectsLocalDevelopmentSites;
 use Expose\Client\Commands\Concerns\SharesViteServer;
+use Expose\Client\Commands\Concerns\TriggersLogin;
 use Expose\Client\Factory;
 use chillerlan\QRCode\Common\Version;
 use chillerlan\QRCode\Data\QRMatrix;
@@ -25,8 +25,9 @@ class ShareCommand extends ServerAwareCommand
 {
     use DetectsLocalDevelopmentSites;
     use SharesViteServer;
+    use TriggersLogin;
 
-    protected $signature = 'share {host} {--subdomain=} {--auth=} {--basicAuth=} {--dns=} {--domain=} {--prevent-cors} {--no-vite-detection} {--qr} {--qr-code}';
+    protected $signature = 'share {host} {--subdomain=} {--auth=} {--basicAuth=} {--magic-auth=} {--dns=} {--domain=} {--prevent-cors} {--no-vite-detection} {--qr} {--qr-code}';
 
     protected $description = 'Share a local url with a remote expose server';
 
@@ -39,7 +40,6 @@ class ShareCommand extends ServerAwareCommand
         terminal()->clear();
 
         banner();
-        $this->ensureEnvironmentSetup();
         $this->ensureExposeSetup();
 
         info("Expose version v" . config('app.version'), options: OutputInterface::VERBOSITY_VERBOSE);
@@ -48,6 +48,11 @@ class ShareCommand extends ServerAwareCommand
         info("Using auth token: $auth", options: OutputInterface::VERBOSITY_VERBOSE);
 
         info("Using basic auth: ". $this->option('basicAuth'), options: OutputInterface::VERBOSITY_VERBOSE);
+
+        if ($this->getMagicAuthValue() !== null) {
+            $magicAuthPatterns = $this->getMagicAuthValue() ?: 'any email';
+            info("Using magic auth: ". $magicAuthPatterns, options: OutputInterface::VERBOSITY_VERBOSE);
+        }
 
         if (strstr($this->argument('host'), 'host.docker.internal')) {
             config(['expose.dns' => true]);
@@ -107,6 +112,7 @@ class ShareCommand extends ServerAwareCommand
             ->setPort($this->getServerPort())
             ->setAuth($auth)
             ->setBasicAuth($this->option('basicAuth'))
+            ->setMagicAuth($this->getMagicAuthValue())
             ->setPreventCORS($this->option('prevent-cors'))
             ->createClient()
             ->share(
@@ -155,42 +161,6 @@ class ShareCommand extends ServerAwareCommand
         $this->isWindows = strpos(php_uname('s'), 'Windows') !== false;
     }
 
-    protected function ensureEnvironmentSetup(): void
-    {
-        if (!$this->isWindows()) {
-            return;
-        }
-        if (!$this->isWmicAvailable()) {
-            error('The "wmic" command is not available on this Windows machine.');
-            error(
-                'Please refer to the documentation for more information: https://expose.dev/docs/troubleshooting',
-                abort: true
-            );
-        }
-    }
-
-    protected function ensureExposeSetup(): void
-    {
-        if (empty(config('expose.auth_token'))) {
-            info();
-            error('No authentication token set.');
-            info();
-
-            info("If you don't have an Expose account yet, you can start for free at <a href='https://expose.dev'>expose.dev</a>.");
-            exit;
-        }
-    }
-
-    protected function isWmicAvailable(): bool
-    {
-        $output = [];
-        $exitCode = 0;
-
-        exec('wmic /?', $output, $exitCode);
-
-        return $exitCode === 0;
-    }
-
     protected function isWindows(): bool
     {
         if ($this->isWindows === null) {
@@ -198,5 +168,14 @@ class ShareCommand extends ServerAwareCommand
         }
 
         return $this->isWindows;
+    }
+
+    protected function getMagicAuthValue(): ?string
+    {
+        if (!$this->input->hasParameterOption('--magic-auth')) {
+            return null;
+        }
+
+        return $this->option('magic-auth') ?? '';
     }
 }
