@@ -38,6 +38,24 @@ Simply add this directory to your `PATH` in your `~/.bash_profile` (or `~/.bashr
 export PATH=~/.composer/vendor/bin:$PATH
 ```
 
+## Building from Source
+
+If you're working with the Expose source code and want to create a new build, use the following command:
+
+```bash
+php expose app:build expose
+```
+
+This will create a new executable in the `builds/expose` directory.
+
+To make the built executable available globally, create a symbolic link to `/usr/local/bin`:
+
+```bash
+ln -s "$(pwd)/builds/expose" /usr/local/bin/tunnel
+```
+
+After building and installing globally, don't forget to configure the client for your self-hosted server by modifying the configuration file at `~/.expose/config.php`. Update the `host` and `port` settings to point to your self-hosted Expose server.
+
 ## As a docker container
 
 Expose has a `Dockerfile` in the root of the source that you can build and use without any extra effort.
